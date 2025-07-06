@@ -273,64 +273,7 @@ class Tutor_Zoyktech_Integration {
      * Add settings to Tutor LMS
      */
     public function add_tutor_settings($config) {
-        $config['tutor_zoyktech'] = array(
-            'label' => __('Zoyktech Payment', 'tutor-zoyktech'),
-            'slug' => 'tutor_zoyktech',
-            'block_type' => 'uniform',
-            'fields' => array(
-                'enable_zoyktech' => array(
-                    'type' => 'toggle_switch',
-                    'label' => __('Enable Zoyktech Payment', 'tutor-zoyktech'),
-                    'default' => false,
-                    'desc' => __('Enable mobile money payments via Zoyktech gateway', 'tutor-zoyktech')
-                ),
-                'zoyktech_environment' => array(
-                    'type' => 'select',
-                    'label' => __('Environment', 'tutor-zoyktech'),
-                    'default' => 'sandbox',
-                    'options' => array(
-                        'sandbox' => __('Sandbox (Testing)', 'tutor-zoyktech'),
-                        'live' => __('Live (Production)', 'tutor-zoyktech')
-                    ),
-                    'desc' => __('Select the environment for processing payments', 'tutor-zoyktech')
-                ),
-                'zoyktech_merchant_id' => array(
-                    'type' => 'text',
-                    'label' => __('Merchant ID', 'tutor-zoyktech'),
-                    'default' => '',
-                    'desc' => __('Enter your Zoyktech Merchant ID', 'tutor-zoyktech')
-                ),
-                'zoyktech_public_id' => array(
-                    'type' => 'text',
-                    'label' => __('Public ID', 'tutor-zoyktech'),
-                    'default' => '',
-                    'desc' => __('Enter your Zoyktech Public ID', 'tutor-zoyktech')
-                ),
-                'zoyktech_secret_key' => array(
-                    'type' => 'text',
-                    'label' => __('Secret Key', 'tutor-zoyktech'),
-                    'default' => '',
-                    'desc' => __('Enter your Zoyktech Secret Key', 'tutor-zoyktech')
-                ),
-                'zoyktech_currency' => array(
-                    'type' => 'select',
-                    'label' => __('Currency', 'tutor-zoyktech'),
-                    'default' => 'ZMW',
-                    'options' => array(
-                        'ZMW' => __('Zambian Kwacha (ZMW)', 'tutor-zoyktech'),
-                        'USD' => __('US Dollar (USD)', 'tutor-zoyktech')
-                    ),
-                    'desc' => __('Select the currency for course payments', 'tutor-zoyktech')
-                ),
-                'zoyktech_debug' => array(
-                    'type' => 'toggle_switch',
-                    'label' => __('Debug Mode', 'tutor-zoyktech'),
-                    'default' => false,
-                    'desc' => __('Enable debug logging for troubleshooting', 'tutor-zoyktech')
-                )
-            )
-        );
-
+        // Settings will be handled by the admin settings class
         return $config;
     }
 

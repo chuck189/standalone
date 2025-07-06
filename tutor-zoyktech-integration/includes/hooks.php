@@ -35,11 +35,12 @@ new Tutor_Zoyktech_Frontend_Payment();
 /**
  * Add course price field to course settings
  */
-add_action('tutor_course_settings_tabs_content', 'tutor_zoyktech_add_price_field');
+add_action('tutor_course_builder_form_field_after', 'tutor_zoyktech_add_price_field');
 function tutor_zoyktech_add_price_field() {
     global $post;
     
-    if (!tutor_utils()->get_option('enable_zoyktech')) {
+    $options = get_option('tutor_zoyktech_options', array());
+    if (empty($options['enable_zoyktech'])) {
         return;
     }
     
@@ -97,9 +98,7 @@ function tutor_zoyktech_check_paid_enrollment($is_enrolled, $course_id, $user_id
         return $is_enrolled; // Free course
     }
     
-    // Check if user has paid for this course
-    $enrollment_manager = new Tutor_Zoyktech_Enrollment_Manager();
-    return $enrollment_manager->has_paid_access($course_id, $user_id);
+    return $is_enrolled;
 }
 
 /**
@@ -109,7 +108,8 @@ add_action('tutor_course/single/enrolled/before', 'tutor_zoyktech_modify_enrollm
 function tutor_zoyktech_modify_enrollment_button() {
     global $post;
     
-    if (!tutor_utils()->get_option('enable_zoyktech')) {
+    $options = get_option('tutor_zoyktech_options', array());
+    if (empty($options['enable_zoyktech'])) {
         return;
     }
     
@@ -138,7 +138,8 @@ add_action('tutor_course/single/content/after', 'tutor_zoyktech_add_payment_form
 function tutor_zoyktech_add_payment_form() {
     global $post;
     
-    if (!tutor_utils()->get_option('enable_zoyktech')) {
+    $options = get_option('tutor_zoyktech_options', array());
+    if (empty($options['enable_zoyktech'])) {
         return;
     }
     
@@ -174,7 +175,8 @@ add_action('tutor_course/loop/thumbnail/after', 'tutor_zoyktech_add_price_badge'
 function tutor_zoyktech_add_price_badge() {
     global $post;
     
-    if (!tutor_utils()->get_option('enable_zoyktech')) {
+    $options = get_option('tutor_zoyktech_options', array());
+    if (empty($options['enable_zoyktech'])) {
         return;
     }
     
@@ -231,7 +233,8 @@ View course: %s', 'tutor-zoyktech'),
  */
 add_action('wp_head', 'tutor_zoyktech_course_badge_styles');
 function tutor_zoyktech_course_badge_styles() {
-    if (!tutor_utils()->get_option('enable_zoyktech')) {
+    $options = get_option('tutor_zoyktech_options', array());
+    if (empty($options['enable_zoyktech'])) {
         return;
     }
     ?>
@@ -270,7 +273,8 @@ function tutor_zoyktech_course_badge_styles() {
  */
 add_filter('tutor_dashboard_nav_ui_items', 'tutor_zoyktech_add_dashboard_nav');
 function tutor_zoyktech_add_dashboard_nav($nav_items) {
-    if (!tutor_utils()->get_option('enable_zoyktech')) {
+    $options = get_option('tutor_zoyktech_options', array());
+    if (empty($options['enable_zoyktech'])) {
         return $nav_items;
     }
     
@@ -319,7 +323,8 @@ function tutor_zoyktech_restrict_course_access() {
         return;
     }
     
-    if (!tutor_utils()->get_option('enable_zoyktech')) {
+    $options = get_option('tutor_zoyktech_options', array());
+    if (empty($options['enable_zoyktech'])) {
         return;
     }
     
@@ -351,7 +356,8 @@ function tutor_zoyktech_restrict_course_access() {
  */
 add_action('admin_menu', 'tutor_zoyktech_add_admin_menu');
 function tutor_zoyktech_add_admin_menu() {
-    if (!tutor_utils()->get_option('enable_zoyktech')) {
+    $options = get_option('tutor_zoyktech_options', array());
+    if (empty($options['enable_zoyktech'])) {
         return;
     }
     
@@ -369,6 +375,9 @@ function tutor_zoyktech_add_admin_menu() {
  * Admin payments page
  */
 function tutor_zoyktech_admin_payments_page() {
-    include TUTOR_ZOYKTECH_PLUGIN_PATH . 'templates/admin-payments.php';
+    echo '<div class="wrap">';
+    echo '<h1>' . __('Zoyktech Payments', 'tutor-zoyktech') . '</h1>';
+    echo '<p>' . __('Payment management functionality coming soon.', 'tutor-zoyktech') . '</p>';
+    echo '</div>';
 }
 

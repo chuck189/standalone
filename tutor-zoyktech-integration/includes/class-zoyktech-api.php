@@ -55,12 +55,13 @@ class Tutor_Zoyktech_API {
      * Constructor
      */
     public function __construct() {
-        $this->environment = tutor_utils()->get_option('zoyktech_environment', 'sandbox');
-        $this->merchant_id = tutor_utils()->get_option('zoyktech_merchant_id');
-        $this->public_id = tutor_utils()->get_option('zoyktech_public_id');
-        $this->secret_key = tutor_utils()->get_option('zoyktech_secret_key');
-        $this->currency = tutor_utils()->get_option('zoyktech_currency', 'ZMW');
-        $this->debug = tutor_utils()->get_option('zoyktech_debug', false);
+        $options = get_option('tutor_zoyktech_options', array());
+        $this->environment = isset($options['zoyktech_environment']) ? $options['zoyktech_environment'] : 'sandbox';
+        $this->merchant_id = isset($options['zoyktech_merchant_id']) ? $options['zoyktech_merchant_id'] : '';
+        $this->public_id = isset($options['zoyktech_public_id']) ? $options['zoyktech_public_id'] : '';
+        $this->secret_key = isset($options['zoyktech_secret_key']) ? $options['zoyktech_secret_key'] : '';
+        $this->currency = isset($options['zoyktech_currency']) ? $options['zoyktech_currency'] : 'ZMW';
+        $this->debug = isset($options['zoyktech_debug']) ? $options['zoyktech_debug'] : false;
     }
 
     /**

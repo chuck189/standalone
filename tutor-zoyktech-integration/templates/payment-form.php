@@ -10,9 +10,17 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$payment_handler = new Tutor_Zoyktech_Course_Payment();
-$formatted_price = $payment_handler->format_price($price);
-$currency = tutor_utils()->get_option('zoyktech_currency', 'ZMW');
+// Safely get options
+$options = get_option('tutor_zoyktech_options', array());
+$currency = isset($options['zoyktech_currency']) ? $options['zoyktech_currency'] : 'ZMW';
+
+// Format price
+$currency_symbols = array(
+    'ZMW' => 'K',
+    'USD' => '$'
+);
+$symbol = isset($currency_symbols[$currency]) ? $currency_symbols[$currency] : $currency;
+$formatted_price = $symbol . number_format($price, 2);
 ?>
 
 <div class="tutor-zoyktech-payment-section">
