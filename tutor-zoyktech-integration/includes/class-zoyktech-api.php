@@ -74,10 +74,14 @@ class Tutor_Zoyktech_API {
     /**
      * Initiate C2B payment for course enrollment
      */
-    public function initiate_course_payment($course_id, $user_id, $phone_number, $provider_id = null) {
+    public function initiate_payment($order, $phone_number, $provider_id = null) {
+        // Extract course information from order
+        $course_id = $order->course_id;
+        $user_id = $order->user_id;
+        $amount = $order->total_price;
+        
         // Get course price
-        $course_price = get_post_meta($course_id, '_tutor_course_price', true);
-        if (empty($course_price) || $course_price <= 0) {
+        if (empty($amount) || $amount <= 0) {
             throw new Exception(__('Course price not found or invalid.', 'tutor-zoyktech'));
         }
 
@@ -94,7 +98,7 @@ class Tutor_Zoyktech_API {
             'merchant_id' => $this->merchant_id,
             'customer_id' => $phone_number,
             'order_id' => $order_id,
-            'amount' => number_format((float) $course_price, 2, '.', ''),
+            'amount' => number_format((float) $amount, 2, '.', ''),
             'currency' => $this->currency,
             'country' => $this->detect_country($phone_number),
             'callback_url' => home_url('/tutor-zoyktech-callback/'),
@@ -116,7 +120,7 @@ class Tutor_Zoyktech_API {
         $response = $this->make_request('/payment_c2b', $payment_data);
 
         // Store transaction in database
-        $this->store_transaction($order_id, $course_id, $user_id, $payment_data, $response);
+        $this->store_transaction($order_id, $course_id, $user_id, $amount, $payment_data, $response);
 
         return array(
             'order_id' => $order_id,
@@ -261,7 +265,7 @@ class Tutor_Zoyktech_API {
     /**
      * Store transaction in database
      */
-    private function store_transaction($order_id, $course_id, $user_id, $payment_data, $response) {
+    private function store_transaction($order_id, $course_id, $user_id, $amount, $payment_data, $response) {
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'tutor_zoyktech_transactions';
@@ -272,7 +276,7 @@ class Tutor_Zoyktech_API {
                 'user_id' => $user_id,
                 'course_id' => $course_id,
                 'order_id' => $order_id,
-                'amount' => $payment_data['amount'],
+                'amount' => $amount,
                 'currency' => $payment_data['currency'],
                 'phone_number' => $payment_data['customer_id'],
                 'provider_id' => $payment_data['provider_id'],

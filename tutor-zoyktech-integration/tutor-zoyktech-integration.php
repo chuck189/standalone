@@ -94,6 +94,7 @@ class Tutor_Zoyktech_Integration {
     private function includes() {
         // Core classes
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-zoyktech-api.php';
+        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-zoyktech-gateway.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-course-payment.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-enrollment-manager.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-history.php';
