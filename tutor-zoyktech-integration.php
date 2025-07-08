@@ -21,4 +21,10 @@
 +        
 +        // Setup wizard
 +        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-setup-wizard.php';
+        
+        // Payment completion handler (most important!)
+        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-completion-handler.php';
+        
+        // Course access manager
+        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-course-access-manager.php';
      }
