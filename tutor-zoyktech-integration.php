@@ -62,6 +62,11 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
      * Initialize the plugin
      */
     public function init() {
+        // Start output buffering to prevent any unexpected output
+        if (!ob_get_level()) {
+            ob_start();
+        }
+
         // Check if WooCommerce is active
         if (!$this->is_woocommerce_active()) {
             add_action('admin_notices', array($this, 'woocommerce_missing_notice'));
@@ -76,6 +81,11 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
 
         // Initialize hooks
         $this->init_hooks();
+
+        // Clean output buffer
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
     }
 
     /**
@@ -100,39 +110,21 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
      * Include required files
      */
     private function includes() {
-        // Core API handler
-        if (file_exists(TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-zoyktech-api.php')) {
-            require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-zoyktech-api.php';
-        }
-        
-        // Core gateway class
-        if (file_exists(TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-wc-zoyktech-gateway.php')) {
-            require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-wc-zoyktech-gateway.php';
-        }
-        
-        // Payment completion handler (most important!)
-        if (file_exists(TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-completion-handler.php')) {
-            require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-completion-handler.php';
-        }
-        
-        // Course access manager
-        if (file_exists(TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-course-access-manager.php')) {
-            require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-course-access-manager.php';
-        }
-        
-        // Tutor LMS + WooCommerce integration
-        if (file_exists(TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-tutor-woocommerce-integration.php')) {
-            require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-tutor-woocommerce-integration.php';
-        }
-        
-        // Admin settings
-        if (file_exists(TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-settings.php')) {
-            require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-settings.php';
-        }
-        
-        // Setup wizard
-        if (file_exists(TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-setup-wizard.php')) {
-            require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-setup-wizard.php';
+        $files = array(
+            'includes/class-zoyktech-api.php',
+            'includes/class-wc-zoyktech-gateway.php',
+            'includes/class-payment-completion-handler.php',
+            'includes/class-course-access-manager.php',
+            'includes/class-tutor-woocommerce-integration.php',
+            'includes/class-admin-settings.php',
+            'includes/class-admin-setup-wizard.php'
+        );
+
+        foreach ($files as $file) {
+            $file_path = TUTOR_ZOYKTECH_PLUGIN_PATH . $file;
+            if (file_exists($file_path)) {
+                require_once $file_path;
+            }
         }
     }
 
@@ -214,14 +206,26 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
      * Plugin activation
      */
     public function activate() {
-        // Create database tables if needed
-        $this->create_tables();
+        // Start output buffering to prevent any output
+        ob_start();
         
-        // Set default options
-        $this->set_default_options();
+        try {
+            // Create database tables if needed
+            $this->create_tables();
+            
+            // Set default options
+            $this->set_default_options();
+            
+            // Flush rewrite rules
+            flush_rewrite_rules();
+            
+        } catch (Exception $e) {
+            // Log error instead of displaying it
+            error_log('Tutor Zoyktech Activation Error: ' . $e->getMessage());
+        }
         
-        // Flush rewrite rules
-        flush_rewrite_rules();
+        // Clean output buffer
+        ob_end_clean();
     }
 
     /**
@@ -262,7 +266,10 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
             KEY status (status)
         ) $charset_collate;";
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        if (!function_exists('dbDelta')) {
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        }
+        
         dbDelta($sql);
     }
 

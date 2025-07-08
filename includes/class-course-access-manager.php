@@ -19,8 +19,16 @@ class Tutor_Zoyktech_Course_Access_Manager {
      * Constructor
      */
     public function __construct() {
+        // Prevent output during construction
+        if (!ob_get_level()) {
+            ob_start();
+        }
+        
         // Only initialize if Tutor LMS is active
         if (!function_exists('tutor')) {
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return;
         }
         
@@ -34,6 +42,11 @@ class Tutor_Zoyktech_Course_Access_Manager {
         
         // Ensure enrollment is properly recognized
         add_filter('tutor_is_enrolled', array($this, 'verify_paid_enrollment'), 10, 3);
+        
+        // Clean output buffer
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
     }
 
     /**

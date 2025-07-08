@@ -19,14 +19,27 @@ class Tutor_Zoyktech_Setup_Wizard {
      * Constructor
      */
     public function __construct() {
+        // Prevent output during construction
+        if (!ob_get_level()) {
+            ob_start();
+        }
+        
         // Only initialize if we're in admin
         if (!is_admin()) {
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return;
         }
         
         add_action('admin_menu', array($this, 'add_setup_page'));
         add_action('admin_init', array($this, 'handle_setup_actions'));
         add_action('admin_notices', array($this, 'show_setup_notice'));
+        
+        // Clean output buffer
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
     }
 
     /**
