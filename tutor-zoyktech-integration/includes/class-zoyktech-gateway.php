@@ -30,7 +30,21 @@ class Tutor_Zoyktech_Gateway {
      */
     public function __construct() {
         // Handle payment callbacks
-        add_action('init', array($this, 'handle_callback'));
+        add_action('init', array($this, 'init_gateway'));
+    }
+    
+    /**
+     * Initialize gateway
+     */
+    public function init_gateway() {
+        // Handle payment callbacks
+        add_action('template_redirect', array($this, 'handle_callback'));
+        
+        // Add admin menu if needed
+        if (is_admin()) {
+            add_action('admin_menu', array($this, 'add_settings_menu'));
+            add_action('wp_ajax_tutor_zoyktech_test_connection', array($this, 'test_gateway_connection'));
+        }
     }
 
     /**
@@ -62,6 +76,42 @@ class Tutor_Zoyktech_Gateway {
             ),
             'secret_key' => array(
                 'type' => 'password',
+                'label' => 'Secret Key',
+                'desc' => 'Enter your Zoyktech Secret Key',
+                'required' => true
+            ),
+            'environment' => array(
+                'type' => 'select',
+                'label' => 'Environment',
+                'desc' => 'Select environment for processing payments',
+                'options' => array(
+                    'sandbox' => 'Sandbox (Testing)',
+                    'live' => 'Live (Production)'
+                ),
+                'default' => 'sandbox'
+            ),
+            'currency' => array(
+                'type' => 'select',
+                'label' => 'Currency',
+                'desc' => 'Select currency for payments',
+                'options' => array(
+                    'ZMW' => 'Zambian Kwacha (ZMW)',
+                    'USD' => 'US Dollar (USD)'
+                ),
+                'default' => 'ZMW'
+            ),
+            'debug_mode' => array(
+                'type' => 'checkbox',
+                'label' => 'Debug Mode',
+                'desc' => 'Enable debug logging for troubleshooting',
+                'default' => false
+            )
+        );
+
+        return $config;
+    }
+
+    /**
      * Payment form on checkout
      */
     public function gateway_form($order) {
