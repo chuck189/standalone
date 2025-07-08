@@ -198,6 +198,72 @@
                 zoyktechCheckout.initializeFields();
             }
         });
+        
+        // Handle course checkout customizations
+        if ($('.checkout-course-products').length) {
+            // Add checkout header if not present
+            if (!$('.course-checkout-header').length) {
+                $('.woocommerce-checkout').prepend(`
+                    <div class="course-checkout-header">
+                        <h2>📱 Complete Your Course Purchase</h2>
+                        <p>Quick and secure mobile money payment</p>
+                    </div>
+                `);
+            }
+            
+            // Auto-select mobile money payment
+            $('#payment_method_zoyktech').prop('checked', true);
+            
+            // Hide billing fields
+            $('.woocommerce-billing-fields').hide();
+            $('.woocommerce-additional-fields').hide();
+            
+            // Focus on payment method
+            $('.payment_method_zoyktech').addClass('active');
+            
+            // Auto-populate billing fields
+            function populateBillingFields() {
+                if (!$('#billing_first_name').val()) {
+                    $('#billing_first_name').val('Student');
+                }
+                if (!$('#billing_last_name').val()) {
+                    $('#billing_last_name').val('User');
+                }
+                if (!$('#billing_email').val()) {
+                    $('#billing_email').val('student@example.com');
+                }
+                if (!$('#billing_phone').val()) {
+                    $('#billing_phone').val('+260971234567');
+                }
+                $('#billing_address_1').val('Lusaka');
+                $('#billing_city').val('Lusaka');
+                $('#billing_state').val('Lusaka');
+                $('#billing_postcode').val('10101');
+                $('#billing_country').val('ZM');
+            }
+            
+            // Populate fields immediately
+            populateBillingFields();
+            
+            // Handle form submission
+            $('form.checkout').on('submit', function() {
+                // Ensure fields are populated before submission
+                populateBillingFields();
+                
+                // Add processing class
+                $('.checkout-course-products').addClass('processing');
+            });
+            
+            // Remove processing class on error
+            $(document.body).on('checkout_error', function() {
+                $('.checkout-course-products').removeClass('processing');
+            });
+            
+            // Handle successful checkout
+            $(document.body).on('checkout_success', function() {
+                $('.checkout-course-products').removeClass('processing');
+            });
+        }
     });
 
 })(jQuery);

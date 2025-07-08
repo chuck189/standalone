@@ -98,6 +98,9 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-settings.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-setup-wizard.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/hooks.php';
+            'includes/class-checkout-customizer.php',
+            'includes/class-checkout-detector.php',
+            'includes/class-user-registration.php'
     }
 
     /**

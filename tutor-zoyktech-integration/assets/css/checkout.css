@@ -251,3 +251,231 @@
         100% { transform: none; }
     }
 }
+
+/* ========================================
+   STREAMLINED CHECKOUT STYLES
+   ======================================== */
+
+/* Course checkout specific styles */
+.course-checkout .woocommerce-checkout {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.course-checkout-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+.course-checkout-header h2 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.course-checkout-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 16px;
+}
+
+/* Hide billing details for course products */
+.checkout-course-products .woocommerce-billing-fields {
+    display: none !important;
+}
+
+.checkout-course-products .woocommerce-additional-fields {
+    display: none !important;
+}
+
+.checkout-course-products .woocommerce-shipping-fields {
+    display: none !important;
+}
+
+/* Adjust layout for hidden fields */
+.checkout-course-products #customer_details {
+    width: 100% !important;
+    float: none !important;
+}
+
+.checkout-course-products #order_review {
+    width: 100% !important;
+    float: none !important;
+    margin-top: 20px;
+}
+
+/* Enhanced mobile money payment section */
+.checkout-course-products .wc_payment_methods {
+    background: #ffffff;
+    border: 2px solid #667eea;
+    border-radius: 16px;
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+}
+
+.checkout-course-products .wc_payment_method_zoyktech {
+    background: #f8f9ff;
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 0;
+}
+
+.checkout-course-products .payment_method_zoyktech label {
+    font-weight: 700;
+    font-size: 18px;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.checkout-course-products .payment_method_zoyktech label::before {
+    content: "📱";
+    font-size: 24px;
+}
+
+/* Enhanced payment box */
+.checkout-course-products .payment_box {
+    background: #ffffff;
+    border: 1px solid #e8ecef;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+}
+
+/* Order review enhancements */
+.checkout-course-products .woocommerce-checkout-review-order {
+    background: #ffffff;
+    border: 2px solid #e8ecef;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.checkout-course-products .woocommerce-checkout-review-order h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 20px;
+    font-weight: 600;
+    border-bottom: 2px solid #f8f9fa;
+    padding-bottom: 12px;
+}
+
+/* Course item styling */
+.checkout-course-products .cart_item {
+    background: #f8f9ff;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #e8ecef;
+}
+
+.checkout-course-products .product-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.checkout-course-products .product-total {
+    font-weight: 700;
+    color: #667eea;
+}
+
+/* Place order button */
+.checkout-course-products #place_order {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 20px 32px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.checkout-course-products #place_order:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+.checkout-course-products #place_order:active {
+    transform: translateY(0);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .course-checkout-header {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .course-checkout-header h2 {
+        font-size: 24px;
+    }
+    
+    .checkout-course-products .wc_payment_methods {
+        padding: 16px;
+    }
+    
+    .checkout-course-products .wc_payment_method_zoyktech {
+        padding: 16px;
+    }
+    
+    .checkout-course-products .payment_method_zoyktech label {
+        font-size: 16px;
+    }
+    
+    .checkout-course-products .woocommerce-checkout-review-order {
+        padding: 16px;
+    }
+}
+
+/* Loading state */
+.checkout-course-products.processing {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.checkout-course-products.processing::after {
+    content: "Processing...";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px 40px;
+    border-radius: 8px;
+    z-index: 9999;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Success message styling */
+.woocommerce-message {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border-left: 4px solid #28a745;
+}
+
+.woocommerce-error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border-left: 4px solid #dc3545;
+}
