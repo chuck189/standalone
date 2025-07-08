@@ -1,0 +1,253 @@
+/**
+ * Zoyktech WooCommerce Checkout Styles
+ */
+
+/* Payment Fields */
+.zoyktech-payment-fields {
+    margin: 15px 0;
+}
+
+.zoyktech-payment-fields .form-row {
+    margin-bottom: 20px;
+}
+
+.zoyktech-payment-fields label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.zoyktech-payment-fields input[type="tel"],
+.zoyktech-payment-fields select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.zoyktech-payment-fields input[type="tel"]:focus,
+.zoyktech-payment-fields select:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 1px #007cba;
+}
+
+.zoyktech-payment-fields .form-help {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.zoyktech-payment-fields .required {
+    color: #e74c3c;
+}
+
+/* Provider Detection */
+#zoyktech-phone-number.provider-detected {
+    border-color: #28a745;
+    background-color: #f8fff8;
+}
+
+#zoyktech-provider.provider-airtel {
+    border-color: #ff6600;
+    background-color: #fff5f0;
+}
+
+#zoyktech-provider.provider-mtn {
+    border-color: #ffcc00;
+    background-color: #fffbf0;
+}
+
+/* Supported Providers */
+.zoyktech-supported-providers {
+    margin: 20px 0;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #e9ecef;
+}
+
+.zoyktech-supported-providers h5 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.provider-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.provider-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.provider-icon {
+    font-size: 18px;
+    width: 32px;
+    text-align: center;
+}
+
+.provider-name {
+    font-weight: 500;
+    flex: 1;
+}
+
+.provider-numbers {
+    color: #666;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+/* Payment Notice */
+.payment-notice {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.payment-notice p {
+    margin: 0 0 10px 0;
+    color: #856404;
+}
+
+.payment-notice ol {
+    margin: 10px 0 0 20px;
+    color: #856404;
+}
+
+.payment-notice li {
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .provider-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 6px;
+    }
+    
+    .provider-name,
+    .provider-numbers {
+        text-align: center;
+    }
+}
+
+/* Loading States */
+.zoyktech-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.zoyktech-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007cba;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error States */
+.zoyktech-error {
+    border-color: #e74c3c !important;
+    background-color: #ffeaea;
+}
+
+.zoyktech-error-message {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Success States */
+.zoyktech-success {
+    border-color: #28a745 !important;
+    background-color: #f8fff8;
+}
+
+/* Payment Gateway Icon */
+.payment_method_zoyktech img {
+    width: auto;
+    height: 24px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* WooCommerce Form Overrides */
+.woocommerce-checkout .zoyktech-payment-fields .form-row-wide {
+    width: 100%;
+}
+
+.woocommerce-checkout .zoyktech-payment-fields input,
+.woocommerce-checkout .zoyktech-payment-fields select {
+    border-radius: 4px;
+}
+
+/* Validation Styles */
+.woocommerce-checkout .zoyktech-payment-fields input:invalid {
+    border-color: #e74c3c;
+}
+
+.woocommerce-checkout .zoyktech-payment-fields input:valid {
+    border-color: #28a745;
+}
+
+/* Focus Styles for Accessibility */
+.zoyktech-payment-fields input:focus,
+.zoyktech-payment-fields select:focus {
+    outline: 2px solid #007cba;
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .zoyktech-payment-fields input,
+    .zoyktech-payment-fields select {
+        border-width: 2px;
+    }
+    
+    .provider-item {
+        border-width: 2px;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .zoyktech-payment-fields input,
+    .zoyktech-payment-fields select {
+        transition: none;
+    }
+    
+    @keyframes spin {
+        0% { transform: none; }
+        100% { transform: none; }
+    }
+}

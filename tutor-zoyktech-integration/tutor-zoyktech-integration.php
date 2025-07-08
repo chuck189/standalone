@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Tutor LMS Zoyktech Payment Integration
- * Plugin URI: https://github.com/your-repo/tutor-zoyktech-integration
- * Description: Direct integration between Tutor LMS and Zoyktech payment gateway for seamless mobile money course payments in Zambia.
+ * Plugin Name: Tutor LMS Zoyktech WooCommerce Gateway
+ * Plugin URI: https://github.com/your-repo/tutor-zoyktech-woocommerce
+ * Description: Zoyktech Mobile Money payment gateway for WooCommerce that works seamlessly with Tutor LMS course purchases.
  * Version: 1.0.0
  * Author: Your Name
  * Author URI: https://yourwebsite.com
@@ -13,11 +13,8 @@
  * Requires at least: 5.0
  * Tested up to: 6.4
  * Requires PHP: 7.4
- * 
- * Tutor LMS Zoyktech Integration is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * any later version.
+ * WC requires at least: 5.0
+ * WC tested up to: 8.5
  */
 
 // Prevent direct access
@@ -33,9 +30,9 @@ define('TUTOR_ZOYKTECH_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('TUTOR_ZOYKTECH_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
- * Main Tutor Zoyktech Integration Class
+ * Main Tutor Zoyktech WooCommerce Gateway Class
  */
-class Tutor_Zoyktech_Integration {
+class Tutor_Zoyktech_WooCommerce_Gateway {
 
     /**
      * Plugin instance
@@ -65,27 +62,20 @@ class Tutor_Zoyktech_Integration {
      * Initialize the plugin
      */
     public function init() {
-        // Check if Tutor LMS is active
-        if (!$this->is_tutor_lms_active()) {
-            add_action('admin_notices', array($this, 'tutor_lms_missing_notice'));
+        // Check if WooCommerce is active
+        if (!$this->is_woocommerce_active()) {
+            add_action('admin_notices', array($this, 'woocommerce_missing_notice'));
             return;
         }
 
-        // Load plugin textdomain at proper time
+        // Load plugin textdomain
         add_action('init', array($this, 'load_textdomain'));
-        
+
         // Include required files
         $this->includes();
 
-        // Initialize components
+        // Initialize hooks
         $this->init_hooks();
-    }
-
-    /**
-     * Check if Tutor LMS is active
-     */
-    private function is_tutor_lms_active() {
-        return class_exists('TUTOR\\Tutor') || function_exists('tutor');
     }
 
     /**
@@ -93,227 +83,118 @@ class Tutor_Zoyktech_Integration {
      */
     public function load_textdomain() {
         load_plugin_textdomain(
-            'tutor-zoyktech', 
-            false, 
+            'tutor-zoyktech',
+            false,
             dirname(plugin_basename(__FILE__)) . '/languages'
         );
+    }
+
+    /**
+     * Check if WooCommerce is active
+     */
+    private function is_woocommerce_active() {
+        return class_exists('WooCommerce');
     }
 
     /**
      * Include required files
      */
     private function includes() {
-        // Core classes
+        // Core gateway class
+        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-wc-zoyktech-gateway.php';
+        
+        // API handler
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-zoyktech-api.php';
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-course-payment.php';
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-enrollment-manager.php';
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-history.php';
         
-        // Frontend classes
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-frontend-payment.php';
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-student-dashboard.php';
-        
-        // Manual payment gateway
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-manual-payment-gateway.php';
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-payment-manager.php';
-        
-        // Hooks and filters
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/hooks.php';
+        // Admin settings
+        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-settings.php';
     }
 
     /**
      * Initialize hooks
      */
     private function init_hooks() {
-        // Initialize after WordPress and Tutor LMS are fully loaded
-        add_action('init', array($this, 'late_init'), 25);
-    }
-
-    /**
-     * Late initialization after WordPress is fully loaded
-     */
-    public function late_init() {
-        // Enqueue scripts and styles
-        add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
-        add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
-
-        // Payment-related hooks
-        add_action('wp_ajax_tutor_zoyktech_payment', array($this, 'handle_payment_ajax'));
-        add_action('wp_ajax_nopriv_tutor_zoyktech_payment', array($this, 'handle_payment_ajax'));
+        // Add gateway to WooCommerce
+        add_filter('woocommerce_payment_gateways', array($this, 'add_gateway'));
         
-        // Payment callback endpoint
-        $this->add_payment_callback_endpoint();
-        add_action('template_redirect', array($this, 'handle_payment_callback'));
+        // Add settings link
+        add_filter('plugin_action_links_' . TUTOR_ZOYKTECH_PLUGIN_BASENAME, array($this, 'plugin_action_links'));
+        
+        // Handle payment callbacks
+        add_action('woocommerce_api_wc_zoyktech_gateway', array($this, 'handle_callback'));
+        
+        // Enqueue scripts
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
     }
 
     /**
-     * Enqueue frontend scripts and styles
+     * Add gateway to WooCommerce
+     */
+    public function add_gateway($gateways) {
+        $gateways[] = 'WC_Zoyktech_Gateway';
+        return $gateways;
+    }
+
+    /**
+     * Add settings link to plugin page
+     */
+    public function plugin_action_links($links) {
+        $settings_link = '<a href="' . admin_url('admin.php?page=wc-settings&tab=checkout&section=zoyktech') . '">' . __('Settings', 'tutor-zoyktech') . '</a>';
+        array_unshift($links, $settings_link);
+        return $links;
+    }
+
+    /**
+     * Handle payment callbacks
+     */
+    public function handle_callback() {
+        $gateway = new WC_Zoyktech_Gateway();
+        $gateway->handle_callback();
+    }
+
+    /**
+     * Enqueue scripts
      */
     public function enqueue_scripts() {
-        if (is_singular('courses') || tutor_utils()->is_tutor_dashboard()) {
+        if (is_checkout() || is_cart()) {
             wp_enqueue_style(
-                'tutor-zoyktech-style',
-                TUTOR_ZOYKTECH_PLUGIN_URL . 'assets/css/frontend.css',
+                'tutor-zoyktech-checkout',
+                TUTOR_ZOYKTECH_PLUGIN_URL . 'assets/css/checkout.css',
                 array(),
                 TUTOR_ZOYKTECH_VERSION
             );
 
             wp_enqueue_script(
-                'tutor-zoyktech-script',
-                TUTOR_ZOYKTECH_PLUGIN_URL . 'assets/js/frontend.js',
+                'tutor-zoyktech-checkout',
+                TUTOR_ZOYKTECH_PLUGIN_URL . 'assets/js/checkout.js',
                 array('jquery'),
                 TUTOR_ZOYKTECH_VERSION,
                 true
             );
 
-            wp_localize_script('tutor-zoyktech-script', 'tutorZoyktech', array(
+            wp_localize_script('tutor-zoyktech-checkout', 'zoyktechCheckout', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('tutor_zoyktech_nonce'),
                 'messages' => array(
-                    'processing' => __('Processing payment...', 'tutor-zoyktech'),
-                    'success' => __('Payment successful! Enrolling you in the course...', 'tutor-zoyktech'),
-                    'error' => __('Payment failed. Please try again.', 'tutor-zoyktech'),
-                    'phone_required' => __('Please enter your mobile money number.', 'tutor-zoyktech'),
-                    'phone_invalid' => __('Please enter a valid mobile money number with country code.', 'tutor-zoyktech')
+                    'phone_invalid' => __('Please enter a valid mobile money number with country code (+260...)', 'tutor-zoyktech'),
+                    'provider_detected' => __('Provider detected automatically', 'tutor-zoyktech')
                 )
             ));
         }
     }
 
     /**
-     * Enqueue admin scripts and styles
-     */
-    public function admin_enqueue_scripts($hook) {
-        if (strpos($hook, 'tutor') !== false) {
-            wp_enqueue_style(
-                'tutor-zoyktech-admin-style',
-                TUTOR_ZOYKTECH_PLUGIN_URL . 'assets/css/admin.css',
-                array(),
-                TUTOR_ZOYKTECH_VERSION
-            );
-
-            wp_enqueue_script(
-                'tutor-zoyktech-admin-script',
-                TUTOR_ZOYKTECH_PLUGIN_URL . 'assets/js/admin.js',
-                array('jquery'),
-                TUTOR_ZOYKTECH_VERSION,
-                true
-            );
-        }
-    }
-
-    /**
-     * Add payment button to course pages
-     */
-    public function add_payment_button() {
-        global $post;
-        
-        if (!is_user_logged_in()) {
-            return;
-        }
-
-        $course_id = get_the_ID();
-        $user_id = get_current_user_id();
-        
-        // Check if user is already enrolled
-        if (tutor_utils()->is_enrolled($course_id, $user_id)) {
-            return;
-        }
-
-        // Check if course has a price
-        $course_price = get_post_meta($course_id, '_tutor_course_price', true);
-        if (empty($course_price) || $course_price <= 0) {
-            return;
-        }
-
-        // Display payment form
-        $this->display_payment_form($course_id, $course_price);
-    }
-
-    /**
-     * Display payment form
-     */
-    private function display_payment_form($course_id, $price) {
-        include TUTOR_ZOYKTECH_PLUGIN_PATH . 'templates/payment-form.php';
-    }
-
-    /**
-     * Handle payment AJAX
-     */
-    public function handle_payment_ajax() {
-        check_ajax_referer('tutor_zoyktech_nonce', 'nonce');
-
-        $course_id = intval($_POST['course_id']);
-        $phone_number = sanitize_text_field($_POST['phone_number']);
-        $provider_id = sanitize_text_field($_POST['provider_id']);
-
-        try {
-            $payment_handler = new Tutor_Zoyktech_Course_Payment();
-            $result = $payment_handler->process_payment($course_id, $phone_number, $provider_id);
-
-            wp_send_json_success($result);
-        } catch (Exception $e) {
-            wp_send_json_error(array(
-                'message' => $e->getMessage()
-            ));
-        }
-    }
-
-    /**
-     * Add payment callback endpoint
-     */
-    public function add_payment_callback_endpoint() {
-        add_rewrite_rule(
-            '^tutor-zoyktech-callback/?$',
-            'index.php?tutor_zoyktech_callback=1',
-            'top'
-        );
-        add_rewrite_tag('%tutor_zoyktech_callback%', '([^&]+)');
-    }
-
-    /**
-     * Handle payment callback
-     */
-    public function handle_payment_callback() {
-        if (get_query_var('tutor_zoyktech_callback')) {
-            $callback_handler = new Tutor_Zoyktech_Payment_Callback();
-            $callback_handler->handle_callback();
-            exit;
-        }
-    }
-
-    /**
-     * Add settings to Tutor LMS
-     */
-    public function add_tutor_settings($config) {
-        // Settings will be handled by the admin settings class
-        return $config;
-    }
-
-    /**
-     * Add payment history tab to student dashboard
-     */
-    public function add_payment_history_tab() {
-        include TUTOR_ZOYKTECH_PLUGIN_PATH . 'templates/dashboard-payment-history.php';
-    }
-
-    /**
      * Plugin activation
      */
     public function activate() {
-        // Create database tables
+        // Create database tables if needed
         $this->create_tables();
-        
-        // Flush rewrite rules
-        flush_rewrite_rules();
     }
 
     /**
      * Plugin deactivation
      */
     public function deactivate() {
-        // Flush rewrite rules
-        flush_rewrite_rules();
+        // Clean up if needed
     }
 
     /**
@@ -324,26 +205,25 @@ class Tutor_Zoyktech_Integration {
 
         $charset_collate = $wpdb->get_charset_collate();
 
-        // Payment transactions table
-        $table_name = $wpdb->prefix . 'tutor_zoyktech_transactions';
+        // Payment logs table
+        $table_name = $wpdb->prefix . 'zoyktech_payment_logs';
         $sql = "CREATE TABLE $table_name (
             id bigint(20) NOT NULL AUTO_INCREMENT,
-            user_id bigint(20) NOT NULL,
-            course_id bigint(20) NOT NULL,
-            order_id varchar(100) NOT NULL,
+            order_id bigint(20) NOT NULL,
             transaction_id varchar(100) DEFAULT NULL,
+            zoyktech_order_id varchar(100) NOT NULL,
             amount decimal(10,2) NOT NULL,
             currency varchar(3) NOT NULL DEFAULT 'ZMW',
             phone_number varchar(20) NOT NULL,
             provider_id int(11) NOT NULL,
             status varchar(20) NOT NULL DEFAULT 'pending',
-            payment_data longtext DEFAULT NULL,
+            request_data longtext DEFAULT NULL,
+            response_data longtext DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            UNIQUE KEY order_id (order_id),
-            KEY user_id (user_id),
-            KEY course_id (course_id),
+            UNIQUE KEY zoyktech_order_id (zoyktech_order_id),
+            KEY order_id (order_id),
             KEY status (status)
         ) $charset_collate;";
 
@@ -352,15 +232,14 @@ class Tutor_Zoyktech_Integration {
     }
 
     /**
-     * Show notice if Tutor LMS is not active
+     * Show notice if WooCommerce is not active
      */
-    public function tutor_lms_missing_notice() {
+    public function woocommerce_missing_notice() {
         echo '<div class="notice notice-error"><p>';
-        echo __('Tutor LMS Zoyktech Integration requires Tutor LMS to be installed and activated.', 'tutor-zoyktech');
+        echo __('Tutor LMS Zoyktech WooCommerce Gateway requires WooCommerce to be installed and activated.', 'tutor-zoyktech');
         echo '</p></div>';
     }
 }
 
 // Initialize the plugin
-Tutor_Zoyktech_Integration::get_instance();
-
+Tutor_Zoyktech_WooCommerce_Gateway::get_instance();

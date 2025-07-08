@@ -1,6 +1,6 @@
 <?php
 /**
- * Zoyktech API Integration for Tutor LMS
+ * Zoyktech API Integration
  *
  * @package TutorZoyktech
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Zoyktech API Class for Tutor LMS
+ * Zoyktech API Class
  */
 class Tutor_Zoyktech_API {
 
@@ -42,11 +42,6 @@ class Tutor_Zoyktech_API {
     private $secret_key;
 
     /**
-     * Currency
-     */
-    private $currency;
-
-    /**
      * Debug mode
      */
     private $debug;
@@ -54,14 +49,12 @@ class Tutor_Zoyktech_API {
     /**
      * Constructor
      */
-    public function __construct() {
-        $options = get_option('tutor_zoyktech_options', array());
-        $this->environment = isset($options['zoyktech_environment']) ? $options['zoyktech_environment'] : 'sandbox';
-        $this->merchant_id = isset($options['zoyktech_merchant_id']) ? $options['zoyktech_merchant_id'] : '';
-        $this->public_id = isset($options['zoyktech_public_id']) ? $options['zoyktech_public_id'] : '';
-        $this->secret_key = isset($options['zoyktech_secret_key']) ? $options['zoyktech_secret_key'] : '';
-        $this->currency = isset($options['zoyktech_currency']) ? $options['zoyktech_currency'] : 'ZMW';
-        $this->debug = isset($options['zoyktech_debug']) ? $options['zoyktech_debug'] : false;
+    public function __construct($merchant_id, $public_id, $secret_key, $environment = 'sandbox', $debug = false) {
+        $this->merchant_id = $merchant_id;
+        $this->public_id = $public_id;
+        $this->secret_key = $secret_key;
+        $this->environment = $environment;
+        $this->debug = $debug;
     }
 
     /**
@@ -72,60 +65,18 @@ class Tutor_Zoyktech_API {
     }
 
     /**
-     * Initiate C2B payment for course enrollment
+     * Initiate payment
      */
-    public function initiate_payment($order, $phone_number, $provider_id = null) {
-        // Extract course information from order
-        $course_id = $order->course_id;
-        $user_id = $order->user_id;
-        $amount = $order->total_price;
-        
-        // Get course price
-        if (empty($amount) || $amount <= 0) {
-            throw new Exception(__('Course price not found or invalid.', 'tutor-zoyktech'));
-        }
-
-        // Auto-detect provider if not provided
-        if (empty($provider_id)) {
-            $provider_id = $this->detect_provider($phone_number);
-        }
-
-        // Generate unique order ID
-        $order_id = 'TUTOR_' . $course_id . '_' . $user_id . '_' . time();
-
-        // Prepare payment data
-        $payment_data = array(
-            'merchant_id' => $this->merchant_id,
-            'customer_id' => $phone_number,
-            'order_id' => $order_id,
-            'amount' => number_format((float) $amount, 2, '.', ''),
-            'currency' => $this->currency,
-            'country' => $this->detect_country($phone_number),
-            'callback_url' => home_url('/tutor-zoyktech-callback/'),
-            'provider_id' => (int) $provider_id,
-            'extra' => array(
-                'course_id' => $course_id,
-                'user_id' => $user_id,
-                'course_title' => get_the_title($course_id),
-                'customer_name' => $this->get_user_name($user_id)
-            )
-        );
-
-        $this->log('Initiating course payment: ' . print_r($payment_data, true));
-
+    public function initiate_payment($payment_data) {
         // Add signature
         $payment_data['signature'] = $this->generate_signature($payment_data);
+
+        $this->log('Initiating payment: ' . print_r($payment_data, true));
 
         // Make API request
         $response = $this->make_request('/payment_c2b', $payment_data);
 
-        // Store transaction in database
-        $this->store_transaction($order_id, $course_id, $user_id, $amount, $payment_data, $response);
-
-        return array(
-            'order_id' => $order_id,
-            'response' => $response
-        );
+        return $response;
     }
 
     /**
@@ -160,30 +111,11 @@ class Tutor_Zoyktech_API {
     /**
      * Detect country from phone number
      */
-    private function detect_country($phone) {
+    public function detect_country($phone) {
         if (preg_match('/^\+260/', $phone)) {
             return 'ZM'; // Zambia
         }
         return 'ZM'; // Default to Zambia
-    }
-
-    /**
-     * Get user display name
-     */
-    private function get_user_name($user_id) {
-        $user = get_userdata($user_id);
-        if ($user) {
-            return $user->display_name ?: $user->user_login;
-        }
-        return 'Student';
-    }
-
-    /**
-     * Validate phone number
-     */
-    public function validate_phone_number($phone_number) {
-        $cleaned = preg_replace('/[^\d+]/', '', $phone_number);
-        return preg_match('/^\+\d{10,15}$/', $cleaned);
     }
 
     /**
@@ -214,6 +146,20 @@ class Tutor_Zoyktech_API {
         $this->log('Generated signature: ' . $signature);
         
         return $signature;
+    }
+
+    /**
+     * Verify callback signature
+     */
+    public function verify_callback_signature($callback_data) {
+        if (!isset($callback_data['signature'])) {
+            return false;
+        }
+
+        $received_signature = $callback_data['signature'];
+        $expected_signature = $this->generate_signature($callback_data);
+
+        return hash_equals($expected_signature, $received_signature);
     }
 
     /**
@@ -263,137 +209,11 @@ class Tutor_Zoyktech_API {
     }
 
     /**
-     * Store transaction in database
-     */
-    private function store_transaction($order_id, $course_id, $user_id, $amount, $payment_data, $response) {
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'tutor_zoyktech_transactions';
-
-        $wpdb->insert(
-            $table_name,
-            array(
-                'user_id' => $user_id,
-                'course_id' => $course_id,
-                'order_id' => $order_id,
-                'amount' => $amount,
-                'currency' => $payment_data['currency'],
-                'phone_number' => $payment_data['customer_id'],
-                'provider_id' => $payment_data['provider_id'],
-                'status' => 'pending',
-                'payment_data' => json_encode(array(
-                    'request' => $payment_data,
-                    'response' => $response
-                ))
-            ),
-            array('%d', '%d', '%s', '%f', '%s', '%s', '%d', '%s', '%s')
-        );
-
-        if ($wpdb->last_error) {
-            $this->log('Database error: ' . $wpdb->last_error);
-        }
-    }
-
-    /**
-     * Update transaction status
-     */
-    public function update_transaction_status($order_id, $status, $transaction_id = null) {
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'tutor_zoyktech_transactions';
-
-        $update_data = array(
-            'status' => $status,
-            'updated_at' => current_time('mysql')
-        );
-
-        if ($transaction_id) {
-            $update_data['transaction_id'] = $transaction_id;
-        }
-
-        $result = $wpdb->update(
-            $table_name,
-            $update_data,
-            array('order_id' => $order_id),
-            array('%s', '%s', '%s'),
-            array('%s')
-        );
-
-        $this->log("Updated transaction $order_id to status $status");
-
-        return $result !== false;
-    }
-
-    /**
-     * Get transaction by order ID
-     */
-    public function get_transaction($order_id) {
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'tutor_zoyktech_transactions';
-
-        return $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM $table_name WHERE order_id = %s", $order_id)
-        );
-    }
-
-    /**
-     * Get user transactions
-     */
-    public function get_user_transactions($user_id, $limit = 20) {
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'tutor_zoyktech_transactions';
-
-        return $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE user_id = %d ORDER BY created_at DESC LIMIT %d",
-                $user_id,
-                $limit
-            )
-        );
-    }
-
-    /**
-     * Get provider name
-     */
-    public function get_provider_name($provider_id) {
-        $providers = array(
-            237 => 'MTN Zambia',
-            289 => 'Airtel Money Zambia',
-            14 => 'Simulator'
-        );
-
-        return isset($providers[$provider_id]) ? $providers[$provider_id] : 'Unknown Provider';
-    }
-
-    /**
-     * Get status message
-     */
-    public function get_status_message($status) {
-        $statuses = array(
-            'pending' => __('Pending', 'tutor-zoyktech'),
-            'processing' => __('Processing', 'tutor-zoyktech'),
-            'completed' => __('Completed', 'tutor-zoyktech'),
-            'failed' => __('Failed', 'tutor-zoyktech'),
-            'cancelled' => __('Cancelled', 'tutor-zoyktech')
-        );
-
-        return isset($statuses[$status]) ? $statuses[$status] : ucfirst($status);
-    }
-
-    /**
      * Log messages
      */
     private function log($message) {
         if ($this->debug) {
-            error_log('TUTOR_ZOYKTECH: ' . $message);
-            
-            // Also log to file
-            $log_file = WP_CONTENT_DIR . '/tutor-zoyktech-debug.log';
-            $timestamp = date('Y-m-d H:i:s');
-            file_put_contents($log_file, "[$timestamp] $message\n", FILE_APPEND | LOCK_EX);
+            error_log('ZOYKTECH_API: ' . $message);
         }
     }
 }
-
