@@ -12,29 +12,19 @@ if (!defined('ABSPATH')) {
 
 // Initialize components after WordPress is ready
 add_action('init', function() {
-    // Add payment callback handler
-    if (!class_exists('Tutor_Zoyktech_Payment_Callback')) {
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-callback.php';
+    // Initialize components safely
+    if (class_exists('Tutor_Zoyktech_Student_Dashboard')) {
+        new Tutor_Zoyktech_Student_Dashboard();
     }
-
-    // Initialize missing classes
-    if (!class_exists('Tutor_Zoyktech_Payment_History')) {
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-history.php';
+    if (class_exists('Tutor_Zoyktech_Payment_History')) {
+        new Tutor_Zoyktech_Payment_History();
     }
-
-    if (!class_exists('Tutor_Zoyktech_Admin_Settings')) {
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-settings.php';
+    if (class_exists('Tutor_Zoyktech_Admin_Settings')) {
+        new Tutor_Zoyktech_Admin_Settings();
     }
-
-    if (!class_exists('Tutor_Zoyktech_Frontend_Payment')) {
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-frontend-payment.php';
+    if (class_exists('Tutor_Zoyktech_Frontend_Payment')) {
+        new Tutor_Zoyktech_Frontend_Payment();
     }
-
-    // Initialize components
-    new Tutor_Zoyktech_Student_Dashboard();
-    new Tutor_Zoyktech_Payment_History();
-    new Tutor_Zoyktech_Admin_Settings();
-    new Tutor_Zoyktech_Frontend_Payment();
 }, 35);
 
 /**
