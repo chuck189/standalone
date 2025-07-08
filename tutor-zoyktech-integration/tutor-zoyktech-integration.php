@@ -91,7 +91,7 @@ class Tutor_Zoyktech_Integration {
     /**
      * Load plugin textdomain
      */
-    private function load_textdomain() {
+    public function load_textdomain() {
         load_plugin_textdomain(
             'tutor-zoyktech', 
             false, 
