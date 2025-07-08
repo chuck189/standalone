@@ -65,15 +65,15 @@ class Tutor_Zoyktech_Integration {
      * Initialize the plugin
      */
     public function init() {
-        // Load plugin textdomain first
-        $this->load_textdomain();
-        
         // Check if Tutor LMS is active
         if (!$this->is_tutor_lms_active()) {
             add_action('admin_notices', array($this, 'tutor_lms_missing_notice'));
             return;
         }
 
+        // Load plugin textdomain at proper time
+        add_action('init', array($this, 'load_textdomain'));
+        
         // Include required files
         $this->includes();
 
@@ -106,7 +106,7 @@ class Tutor_Zoyktech_Integration {
         // Core classes
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-zoyktech-api.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-zoyktech-gateway.php';
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-tutor-monetization-integration.php';
+        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-simple-gateway-integration.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-course-payment.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-enrollment-manager.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-history.php';
@@ -116,11 +116,6 @@ class Tutor_Zoyktech_Integration {
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-frontend-payment.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-student-dashboard.php';
         
-        // Initialize monetization integration
-        if (class_exists('Tutor_Zoyktech_Monetization_Integration')) {
-            new Tutor_Zoyktech_Monetization_Integration();
-        }
-        
         // Hooks and filters
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/hooks.php';
     }
@@ -129,26 +124,25 @@ class Tutor_Zoyktech_Integration {
      * Initialize hooks
      */
     private function init_hooks() {
+        // Initialize after WordPress and Tutor LMS are fully loaded
+        add_action('init', array($this, 'late_init'), 25);
+    }
+
+    /**
+     * Late initialization after WordPress is fully loaded
+     */
+    public function late_init() {
         // Enqueue scripts and styles
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
 
-        // Add payment button to course pages
-        add_action('tutor_course/single/enrolled/before', array($this, 'add_payment_button'));
-        
-        // Handle payment callbacks
+        // Payment-related hooks
         add_action('wp_ajax_tutor_zoyktech_payment', array($this, 'handle_payment_ajax'));
         add_action('wp_ajax_nopriv_tutor_zoyktech_payment', array($this, 'handle_payment_ajax'));
         
         // Payment callback endpoint
-        add_action('init', array($this, 'add_payment_callback_endpoint'));
+        $this->add_payment_callback_endpoint();
         add_action('template_redirect', array($this, 'handle_payment_callback'));
-
-        // Add settings to Tutor LMS
-        add_filter('tutor_option_extend_config', array($this, 'add_tutor_settings'));
-        
-        // Add payment history to student dashboard
-        add_action('tutor_dashboard/after', array($this, 'add_payment_history_tab'));
     }
 
     /**

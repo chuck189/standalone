@@ -29,21 +29,27 @@ class Tutor_Zoyktech_Gateway {
      * Constructor
      */
     public function __construct() {
-        // Handle payment callbacks
-        add_action('init', array($this, 'init_gateway'));
+        // Initialize gateway after WordPress is ready
+        add_action('init', array($this, 'init_gateway'), 40);
     }
     
     /**
      * Initialize gateway
      */
     public function init_gateway() {
-        // Handle payment callbacks
-        add_action('template_redirect', array($this, 'handle_callback'));
-        
-        // Add admin menu if needed
-        if (is_admin()) {
-            add_action('admin_menu', array($this, 'add_settings_menu'));
-            add_action('wp_ajax_tutor_zoyktech_test_connection', array($this, 'test_gateway_connection'));
+        // Only initialize if not already done
+        if (!did_action('tutor_zoyktech_gateway_initialized')) {
+            // Handle payment callbacks
+            add_action('template_redirect', array($this, 'handle_callback'));
+            
+            // Add admin menu if needed
+            if (is_admin()) {
+                add_action('admin_menu', array($this, 'add_settings_menu'));
+                add_action('wp_ajax_tutor_zoyktech_test_connection', array($this, 'test_gateway_connection'));
+            }
+            
+            // Mark as initialized
+            do_action('tutor_zoyktech_gateway_initialized');
         }
     }
 
