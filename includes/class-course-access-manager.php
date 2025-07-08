@@ -19,6 +19,11 @@ class Tutor_Zoyktech_Course_Access_Manager {
      * Constructor
      */
     public function __construct() {
+        // Only initialize if Tutor LMS is active
+        if (!function_exists('tutor')) {
+            return;
+        }
+        
         // Override Tutor LMS access checks for paid students
         add_filter('tutor_lesson_video_player', array($this, 'ensure_video_access'), 10, 2);
         add_filter('tutor_course_content_access', array($this, 'check_paid_access'), 10, 3);

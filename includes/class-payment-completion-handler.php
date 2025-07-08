@@ -19,6 +19,11 @@ class Tutor_Zoyktech_Payment_Completion_Handler {
      * Constructor
      */
     public function __construct() {
+        // Only initialize if WooCommerce is active
+        if (!class_exists('WooCommerce')) {
+            return;
+        }
+        
         // Handle Zoyktech payment callbacks with highest priority
         add_action('woocommerce_api_wc_zoyktech_gateway', array($this, 'handle_zoyktech_callback'), 5);
         

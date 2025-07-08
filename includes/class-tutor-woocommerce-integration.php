@@ -19,7 +19,10 @@ class Tutor_Zoyktech_WooCommerce_Integration {
      * Constructor
      */
     public function __construct() {
-        add_action('init', array($this, 'init'));
+        // Only initialize if both plugins are active
+        if ($this->is_tutor_active() && $this->is_woocommerce_active()) {
+            add_action('init', array($this, 'init'));
+        }
     }
 
     /**
