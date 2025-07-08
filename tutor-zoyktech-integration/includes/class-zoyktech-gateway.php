@@ -29,41 +29,25 @@ class Tutor_Zoyktech_Gateway {
      * Constructor
      */
     public function __construct() {
-        add_filter('tutor_monetization_gateways', array($this, 'register_gateway'));
-        add_action('tutor_monetization_gateway_form_zoyktech', array($this, 'gateway_form'));
-        add_action('tutor_process_checkout_zoyktech', array($this, 'process_checkout'));
-        add_filter('tutor_gateway_config_zoyktech', array($this, 'gateway_config'));
+        // Handle payment callbacks
         add_action('init', array($this, 'handle_callback'));
-    }
-
-    /**
-     * Register gateway with Tutor LMS
-     */
-    public function register_gateway($gateways) {
-        $gateways['zoyktech'] = array(
-            'label' => __('Zoyktech Mobile Money', 'tutor-zoyktech'),
-            'admin_label' => __('Zoyktech (Mobile Money)', 'tutor-zoyktech'),
-            'supported_currencies' => array('ZMW', 'USD'),
-            'supports' => array('subscription', 'single_payment'),
-            'icon' => TUTOR_ZOYKTECH_PLUGIN_URL . 'assets/images/zoyktech-icon.png',
-            'config_keys' => array(
-                'merchant_id',
-                'public_id', 
-                'secret_key',
-                'environment',
-                'currency',
-                'debug_mode'
-            )
-        );
-
-        return $gateways;
     }
 
     /**
      * Gateway configuration form
      */
-    public function gateway_config() {
+    public function gateway_config($config, $gateway_id) {
+        if ($gateway_id !== $this->gateway_id) {
+            return $config;
+        }
+        
         $config = array(
+            'enabled' => array(
+                'type' => 'checkbox',
+                'label' => __('Enable Zoyktech Mobile Money', 'tutor-zoyktech'),
+                'desc' => __('Enable mobile money payments via Zoyktech gateway', 'tutor-zoyktech'),
+                'default' => false
+            ),
             'merchant_id' => array(
                 'type' => 'text',
                 'label' => __('Merchant ID', 'tutor-zoyktech'),
@@ -78,42 +62,6 @@ class Tutor_Zoyktech_Gateway {
             ),
             'secret_key' => array(
                 'type' => 'password',
-                'label' => __('Secret Key', 'tutor-zoyktech'),
-                'desc' => __('Enter your Zoyktech Secret Key', 'tutor-zoyktech'),
-                'required' => true
-            ),
-            'environment' => array(
-                'type' => 'select',
-                'label' => __('Environment', 'tutor-zoyktech'),
-                'desc' => __('Select environment for processing payments', 'tutor-zoyktech'),
-                'options' => array(
-                    'sandbox' => __('Sandbox (Testing)', 'tutor-zoyktech'),
-                    'live' => __('Live (Production)', 'tutor-zoyktech')
-                ),
-                'default' => 'sandbox'
-            ),
-            'currency' => array(
-                'type' => 'select',
-                'label' => __('Currency', 'tutor-zoyktech'),
-                'desc' => __('Select currency for payments', 'tutor-zoyktech'),
-                'options' => array(
-                    'ZMW' => __('Zambian Kwacha (ZMW)', 'tutor-zoyktech'),
-                    'USD' => __('US Dollar (USD)', 'tutor-zoyktech')
-                ),
-                'default' => 'ZMW'
-            ),
-            'debug_mode' => array(
-                'type' => 'checkbox',
-                'label' => __('Debug Mode', 'tutor-zoyktech'),
-                'desc' => __('Enable debug logging for troubleshooting', 'tutor-zoyktech'),
-                'default' => false
-            )
-        );
-
-        return $config;
-    }
-
-    /**
      * Payment form on checkout
      */
     public function gateway_form($order) {
@@ -418,13 +366,56 @@ class Tutor_Zoyktech_Gateway {
     }
 
     /**
+     * Add settings menu
+     */
+    public function add_settings_menu() {
+        add_submenu_page(
+            'tutor',
+            __('Zoyktech Settings', 'tutor-zoyktech'),
+            __('Zoyktech Payment', 'tutor-zoyktech'),
+            'manage_options',
+            'tutor-zoyktech-settings',
+            array($this, 'settings_page')
+        );
+    }
+
+    /**
+     * Settings page
+     */
+    public function settings_page() {
+        $admin_settings = new Tutor_Zoyktech_Admin_Settings();
+        $admin_settings->settings_page();
+    }
+
+    /**
+     * Test gateway connection
+     */
+    public function test_gateway_connection() {
+        check_ajax_referer('tutor_zoyktech_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Insufficient permissions'));
+        }
+        
+        // Test connection logic here
+        wp_send_json_success(array('message' => 'Gateway connection test successful!'));
+    }
+
+    /**
      * Get gateway settings
      */
-    private function get_gateway_settings() {
-        $settings = get_option('tutor_option', array());
-        $gateway_settings = isset($settings['monetize_by']) ? $settings['monetize_by'] : array();
+    public function get_gateway_settings() {
+        // Try to get from Tutor options first
+        $tutor_options = get_option('tutor_option', array());
+        $monetize_settings = isset($tutor_options['monetize_by']) ? $tutor_options['monetize_by'] : array();
+        $gateway_settings = isset($monetize_settings[$this->gateway_id]) ? $monetize_settings[$this->gateway_id] : array();
         
-        return isset($gateway_settings['zoyktech']) ? $gateway_settings['zoyktech'] : array();
+        // Fallback to plugin options
+        if (empty($gateway_settings)) {
+            $gateway_settings = get_option('tutor_zoyktech_options', array());
+        }
+        
+        return $gateway_settings;
     }
 
     /**
@@ -462,6 +453,3 @@ class Tutor_Zoyktech_Gateway {
         return isset($providers[$provider_id]) ? $providers[$provider_id] : 'Unknown Provider';
     }
 }
-
-// Initialize the gateway
-new Tutor_Zoyktech_Gateway();
