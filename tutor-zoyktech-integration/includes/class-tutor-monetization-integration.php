@@ -24,13 +24,18 @@ class Tutor_Zoyktech_Monetization_Integration {
      * Constructor
      */
     public function __construct() {
-        add_action('init', array($this, 'init'));
+        add_action('plugins_loaded', array($this, 'init'), 20);
     }
 
     /**
      * Initialize integration
      */
     public function init() {
+        // Make sure text domain is loaded
+        if (!did_action('plugins_loaded')) {
+            return;
+        }
+
         // Check if Tutor LMS Pro is active and has monetization
         if (!$this->is_tutor_monetization_active()) {
             // Create our own standalone payment system
@@ -47,8 +52,9 @@ class Tutor_Zoyktech_Monetization_Integration {
      */
     private function is_tutor_monetization_active() {
         return function_exists('tutor') && 
-               class_exists('\TUTOR_ECOM\Ecom') || 
-               class_exists('\TUTOR\Ecommerce');
+               (class_exists('\TUTOR_ECOM\Ecom') || 
+                class_exists('\TUTOR\Ecommerce') ||
+                function_exists('tutor_pro'));
     }
 
     /**
@@ -92,9 +98,9 @@ class Tutor_Zoyktech_Monetization_Integration {
         $options = get_option('tutor_zoyktech_options', array());
         
         $gateways[self::GATEWAY_ID] = array(
-            'label' => __('Zoyktech Mobile Money', 'tutor-zoyktech'),
-            'admin_label' => __('Mobile Money (Zoyktech)', 'tutor-zoyktech'),
-            'description' => __('Accept mobile money payments for courses in Zambia', 'tutor-zoyktech'),
+            'label' => 'Zoyktech Mobile Money',
+            'admin_label' => 'Mobile Money (Zoyktech)',
+            'description' => 'Accept mobile money payments for courses in Zambia',
             'logo' => TUTOR_ZOYKTECH_PLUGIN_URL . 'assets/images/zoyktech-icon.png',
             'icon' => '📱',
             'supported_currencies' => array('ZMW', 'USD'),
@@ -135,74 +141,74 @@ class Tutor_Zoyktech_Monetization_Integration {
         $options = get_option('tutor_zoyktech_options', array());
         ?>
         <div class="tutor-monetization-gateway-config">
-            <h3><?php _e('Zoyktech Mobile Money Configuration', 'tutor-zoyktech'); ?></h3>
+            <h3><?php esc_html_e('Zoyktech Mobile Money Configuration', 'tutor-zoyktech'); ?></h3>
             
             <table class="form-table">
                 <tr>
                     <th scope="row">
-                        <label for="zoyktech_enable"><?php _e('Enable Gateway', 'tutor-zoyktech'); ?></label>
+                        <label for="zoyktech_enable"><?php esc_html_e('Enable Gateway', 'tutor-zoyktech'); ?></label>
                     </th>
                     <td>
                         <input type="checkbox" id="zoyktech_enable" name="tutor_zoyktech_options[enable_zoyktech]" value="1" 
                                <?php checked(!empty($options['enable_zoyktech'])); ?> />
-                        <p class="description"><?php _e('Enable Zoyktech mobile money payments', 'tutor-zoyktech'); ?></p>
+                        <p class="description"><?php esc_html_e('Enable Zoyktech mobile money payments', 'tutor-zoyktech'); ?></p>
                     </td>
                 </tr>
                 
                 <tr>
                     <th scope="row">
-                        <label for="zoyktech_merchant_id"><?php _e('Merchant ID', 'tutor-zoyktech'); ?></label>
+                        <label for="zoyktech_merchant_id"><?php esc_html_e('Merchant ID', 'tutor-zoyktech'); ?></label>
                     </th>
                     <td>
                         <input type="text" id="zoyktech_merchant_id" name="tutor_zoyktech_options[zoyktech_merchant_id]" 
                                value="<?php echo esc_attr($options['zoyktech_merchant_id'] ?? ''); ?>" class="regular-text" />
-                        <p class="description"><?php _e('Your Zoyktech merchant ID', 'tutor-zoyktech'); ?></p>
+                        <p class="description"><?php esc_html_e('Your Zoyktech merchant ID', 'tutor-zoyktech'); ?></p>
                     </td>
                 </tr>
                 
                 <tr>
                     <th scope="row">
-                        <label for="zoyktech_public_id"><?php _e('Public ID', 'tutor-zoyktech'); ?></label>
+                        <label for="zoyktech_public_id"><?php esc_html_e('Public ID', 'tutor-zoyktech'); ?></label>
                     </th>
                     <td>
                         <input type="text" id="zoyktech_public_id" name="tutor_zoyktech_options[zoyktech_public_id]" 
                                value="<?php echo esc_attr($options['zoyktech_public_id'] ?? ''); ?>" class="regular-text" />
-                        <p class="description"><?php _e('Your Zoyktech public ID', 'tutor-zoyktech'); ?></p>
+                        <p class="description"><?php esc_html_e('Your Zoyktech public ID', 'tutor-zoyktech'); ?></p>
                     </td>
                 </tr>
                 
                 <tr>
                     <th scope="row">
-                        <label for="zoyktech_secret_key"><?php _e('Secret Key', 'tutor-zoyktech'); ?></label>
+                        <label for="zoyktech_secret_key"><?php esc_html_e('Secret Key', 'tutor-zoyktech'); ?></label>
                     </th>
                     <td>
                         <input type="password" id="zoyktech_secret_key" name="tutor_zoyktech_options[zoyktech_secret_key]" 
                                value="<?php echo esc_attr($options['zoyktech_secret_key'] ?? ''); ?>" class="regular-text" />
-                        <p class="description"><?php _e('Your Zoyktech secret key', 'tutor-zoyktech'); ?></p>
+                        <p class="description"><?php esc_html_e('Your Zoyktech secret key', 'tutor-zoyktech'); ?></p>
                     </td>
                 </tr>
                 
                 <tr>
                     <th scope="row">
-                        <label for="zoyktech_environment"><?php _e('Environment', 'tutor-zoyktech'); ?></label>
+                        <label for="zoyktech_environment"><?php esc_html_e('Environment', 'tutor-zoyktech'); ?></label>
                     </th>
                     <td>
                         <select id="zoyktech_environment" name="tutor_zoyktech_options[zoyktech_environment]">
                             <option value="sandbox" <?php selected($options['zoyktech_environment'] ?? 'sandbox', 'sandbox'); ?>>
-                                <?php _e('Sandbox (Testing)', 'tutor-zoyktech'); ?>
+                                <?php esc_html_e('Sandbox (Testing)', 'tutor-zoyktech'); ?>
                             </option>
                             <option value="live" <?php selected($options['zoyktech_environment'] ?? 'sandbox', 'live'); ?>>
-                                <?php _e('Live (Production)', 'tutor-zoyktech'); ?>
+                                <?php esc_html_e('Live (Production)', 'tutor-zoyktech'); ?>
                             </option>
                         </select>
-                        <p class="description"><?php _e('Select environment for processing payments', 'tutor-zoyktech'); ?></p>
+                        <p class="description"><?php esc_html_e('Select environment for processing payments', 'tutor-zoyktech'); ?></p>
                     </td>
                 </tr>
             </table>
             
             <p class="submit">
                 <button type="button" class="button button-secondary" onclick="testZoyktechConnection()">
-                    <?php _e('Test Connection', 'tutor-zoyktech'); ?>
+                    <?php esc_html_e('Test Connection', 'tutor-zoyktech'); ?>
                 </button>
             </p>
             
@@ -215,7 +221,7 @@ class Tutor_Zoyktech_Monetization_Integration {
             const resultDiv = document.getElementById('zoyktech-test-result');
             
             button.disabled = true;
-            button.textContent = '<?php _e('Testing...', 'tutor-zoyktech'); ?>';
+            button.textContent = <?php echo json_encode(esc_html__('Testing...', 'tutor-zoyktech')); ?>;
             
             fetch(ajaxurl, {
                 method: 'POST',
@@ -224,7 +230,7 @@ class Tutor_Zoyktech_Monetization_Integration {
                 },
                 body: new URLSearchParams({
                     action: 'tutor_zoyktech_test_connection',
-                    nonce: '<?php echo wp_create_nonce('tutor_zoyktech_test'); ?>',
+                    nonce: <?php echo json_encode(wp_create_nonce('tutor_zoyktech_test')); ?>,
                     merchant_id: document.getElementById('zoyktech_merchant_id').value,
                     public_id: document.getElementById('zoyktech_public_id').value,
                     secret_key: document.getElementById('zoyktech_secret_key').value,
@@ -240,11 +246,11 @@ class Tutor_Zoyktech_Monetization_Integration {
                 }
             })
             .catch(error => {
-                resultDiv.innerHTML = '<div class="notice notice-error"><p><?php _e('Connection test failed', 'tutor-zoyktech'); ?></p></div>';
+                resultDiv.innerHTML = '<div class="notice notice-error"><p><?php echo esc_js(esc_html__('Connection test failed', 'tutor-zoyktech')); ?></p></div>';
             })
             .finally(() => {
                 button.disabled = false;
-                button.textContent = '<?php _e('Test Connection', 'tutor-zoyktech'); ?>';
+                button.textContent = <?php echo json_encode(esc_html__('Test Connection', 'tutor-zoyktech')); ?>;
             });
         }
         </script>
@@ -255,16 +261,20 @@ class Tutor_Zoyktech_Monetization_Integration {
      * Gateway payment form
      */
     public function gateway_form($order) {
-        $gateway = new Tutor_Zoyktech_Gateway();
-        $gateway->gateway_form($order);
+        if (class_exists('Tutor_Zoyktech_Gateway')) {
+            $gateway = new Tutor_Zoyktech_Gateway();
+            $gateway->gateway_form($order);
+        }
     }
 
     /**
      * Process payment
      */
     public function process_payment($order) {
-        $gateway = new Tutor_Zoyktech_Gateway();
-        $gateway->process_checkout($order);
+        if (class_exists('Tutor_Zoyktech_Gateway')) {
+            $gateway = new Tutor_Zoyktech_Gateway();
+            $gateway->process_checkout($order);
+        }
     }
 
     /**
@@ -274,13 +284,13 @@ class Tutor_Zoyktech_Monetization_Integration {
         ?>
         <div class="tutor-option-field-row">
             <div class="tutor-option-field-label">
-                <label><?php _e('Zoyktech Mobile Money', 'tutor-zoyktech'); ?></label>
+                <label><?php esc_html_e('Zoyktech Mobile Money', 'tutor-zoyktech'); ?></label>
             </div>
             <div class="tutor-option-field">
-                <a href="<?php echo admin_url('admin.php?page=tutor-zoyktech-settings'); ?>" class="button">
-                    <?php _e('Configure Zoyktech Settings', 'tutor-zoyktech'); ?>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=tutor-zoyktech-settings')); ?>" class="button">
+                    <?php esc_html_e('Configure Zoyktech Settings', 'tutor-zoyktech'); ?>
                 </a>
-                <p class="desc"><?php _e('Configure mobile money payments for Zambian learners', 'tutor-zoyktech'); ?></p>
+                <p class="desc"><?php esc_html_e('Configure mobile money payments for Zambian learners', 'tutor-zoyktech'); ?></p>
             </div>
         </div>
         <?php
@@ -292,7 +302,7 @@ class Tutor_Zoyktech_Monetization_Integration {
     public function add_payment_section() {
         global $post;
         
-        if (!is_user_logged_in()) {
+        if (!is_user_logged_in() || !$post) {
             return;
         }
 
@@ -300,7 +310,7 @@ class Tutor_Zoyktech_Monetization_Integration {
         $user_id = get_current_user_id();
         
         // Check if user is already enrolled
-        if (tutor_utils()->is_enrolled($course_id, $user_id)) {
+        if (function_exists('tutor_utils') && tutor_utils()->is_enrolled($course_id, $user_id)) {
             return;
         }
 
@@ -317,15 +327,20 @@ class Tutor_Zoyktech_Monetization_Integration {
         }
 
         // Display payment form
-        include TUTOR_ZOYKTECH_PLUGIN_PATH . 'templates/payment-form.php';
+        $template_path = TUTOR_ZOYKTECH_PLUGIN_PATH . 'templates/payment-form.php';
+        if (file_exists($template_path)) {
+            include $template_path;
+        }
     }
 
     /**
      * Handle standalone payment
      */
     public function handle_standalone_payment() {
-        $frontend_payment = new Tutor_Zoyktech_Frontend_Payment();
-        $frontend_payment->process_payment_ajax();
+        if (class_exists('Tutor_Zoyktech_Frontend_Payment')) {
+            $frontend_payment = new Tutor_Zoyktech_Frontend_Payment();
+            $frontend_payment->process_payment_ajax();
+        }
     }
 
     /**
@@ -333,8 +348,8 @@ class Tutor_Zoyktech_Monetization_Integration {
      */
     public function add_monetization_option($options) {
         $options['zoyktech'] = array(
-            'label' => __('Zoyktech Mobile Money', 'tutor-zoyktech'),
-            'description' => __('Enable mobile money payments for courses', 'tutor-zoyktech'),
+            'label' => 'Zoyktech Mobile Money',
+            'description' => 'Enable mobile money payments for courses',
             'icon' => '📱'
         );
         
@@ -369,6 +384,3 @@ class Tutor_Zoyktech_Monetization_Integration {
         return 'active';
     }
 }
-
-// Initialize the integration
-new Tutor_Zoyktech_Monetization_Integration();

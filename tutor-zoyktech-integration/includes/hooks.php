@@ -33,28 +33,6 @@ new Tutor_Zoyktech_Admin_Settings();
 new Tutor_Zoyktech_Frontend_Payment();
 
 /**
- * Force refresh Tutor LMS settings to detect new gateway
- */
-add_action('admin_init', 'tutor_zoyktech_refresh_gateway_settings');
-function tutor_zoyktech_refresh_gateway_settings() {
-    // Clear any cached gateway settings
-    if (function_exists('tutor')) {
-        delete_transient('tutor_monetization_gateways');
-        delete_transient('tutor_payment_gateways');
-    }
-}
-
-/**
- * Ensure gateway is registered early
- */
-add_action('plugins_loaded', 'tutor_zoyktech_register_gateway_early', 5);
-function tutor_zoyktech_register_gateway_early() {
-    if (class_exists('Tutor_Zoyktech_Monetization_Integration')) {
-        new Tutor_Zoyktech_Monetization_Integration();
-    }
-}
-
-/**
  * Add course price field to course settings
  */
 add_action('tutor_course_builder_form_field_after', 'tutor_zoyktech_add_price_field');

@@ -65,14 +65,14 @@ class Tutor_Zoyktech_Integration {
      * Initialize the plugin
      */
     public function init() {
+        // Load plugin textdomain first
+        $this->load_textdomain();
+        
         // Check if Tutor LMS is active
         if (!$this->is_tutor_lms_active()) {
             add_action('admin_notices', array($this, 'tutor_lms_missing_notice'));
             return;
         }
-
-        // Load plugin textdomain
-        load_plugin_textdomain('tutor-zoyktech', false, dirname(plugin_basename(__FILE__)) . '/languages');
 
         // Include required files
         $this->includes();
@@ -86,6 +86,17 @@ class Tutor_Zoyktech_Integration {
      */
     private function is_tutor_lms_active() {
         return class_exists('TUTOR\\Tutor') || function_exists('tutor');
+    }
+
+    /**
+     * Load plugin textdomain
+     */
+    private function load_textdomain() {
+        load_plugin_textdomain(
+            'tutor-zoyktech', 
+            false, 
+            dirname(plugin_basename(__FILE__)) . '/languages'
+        );
     }
 
     /**
@@ -104,6 +115,11 @@ class Tutor_Zoyktech_Integration {
         // Frontend classes
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-frontend-payment.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-student-dashboard.php';
+        
+        // Initialize monetization integration
+        if (class_exists('Tutor_Zoyktech_Monetization_Integration')) {
+            new Tutor_Zoyktech_Monetization_Integration();
+        }
         
         // Hooks and filters
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/hooks.php';
