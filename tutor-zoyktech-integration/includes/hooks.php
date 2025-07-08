@@ -10,22 +10,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Initialize components after WordPress is ready
-add_action('init', function() {
-    // Initialize components safely
-    if (class_exists('Tutor_Zoyktech_Student_Dashboard')) {
-        new Tutor_Zoyktech_Student_Dashboard();
-    }
-    if (class_exists('Tutor_Zoyktech_Payment_History')) {
-        new Tutor_Zoyktech_Payment_History();
-    }
-    if (class_exists('Tutor_Zoyktech_Admin_Settings')) {
-        new Tutor_Zoyktech_Admin_Settings();
-    }
-    if (class_exists('Tutor_Zoyktech_Frontend_Payment')) {
-        new Tutor_Zoyktech_Frontend_Payment();
-    }
-}, 35);
+// Initialize components
+new Tutor_Zoyktech_Student_Dashboard();
+new Tutor_Zoyktech_Payment_History();
+new Tutor_Zoyktech_Frontend_Payment();
 
 /**
  * Add course price field to course settings

@@ -108,14 +108,14 @@ class Tutor_Zoyktech_Integration {
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-course-payment.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-enrollment-manager.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-payment-history.php';
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-settings.php';
         
         // Frontend classes
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-frontend-payment.php';
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-student-dashboard.php';
         
-        // Safe gateway integration
-        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-simple-gateway-integration.php';
+        // Manual payment gateway
+        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-manual-payment-gateway.php';
+        require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/class-admin-payment-manager.php';
         
         // Hooks and filters
         require_once TUTOR_ZOYKTECH_PLUGIN_PATH . 'includes/hooks.php';
