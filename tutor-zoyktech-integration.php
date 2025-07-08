@@ -40,6 +40,11 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
     private static $instance = null;
 
     /**
+     * Initialization flag
+     */
+    private static $initialized = false;
+
+    /**
      * Get plugin instance
      */
     public static function get_instance() {
@@ -53,20 +58,23 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
      * Constructor
      */
     private function __construct() {
-        add_action('plugins_loaded', array($this, 'init'));
+        // Register activation/deactivation hooks early
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
+        
+        // Defer all initialization until plugins_loaded
+        add_action('plugins_loaded', array($this, 'init'), 10);
     }
 
     /**
      * Initialize the plugin
      */
     public function init() {
-        // Start output buffering to prevent any unexpected output
-        if (!ob_get_level()) {
-            ob_start();
+        // Prevent multiple initialization
+        if (self::$initialized) {
+            return;
         }
-
+        
         // Check if WooCommerce is active
         if (!$this->is_woocommerce_active()) {
             add_action('admin_notices', array($this, 'woocommerce_missing_notice'));
@@ -82,10 +90,8 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
         // Initialize hooks
         $this->init_hooks();
 
-        // Clean output buffer
-        if (ob_get_level()) {
-            ob_end_clean();
-        }
+        // Mark as initialized
+        self::$initialized = true;
     }
 
     /**
@@ -110,6 +116,7 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
      * Include required files
      */
     private function includes() {
+        // Core files - include but don't instantiate
         $files = array(
             'includes/class-zoyktech-api.php',
             'includes/class-wc-zoyktech-gateway.php',
@@ -203,28 +210,43 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
     }
 
     /**
-     * Plugin activation
+     * Plugin activation - completely silent
      */
     public function activate() {
-        // Start output buffering to prevent any output
+        // Capture ALL output during activation
         ob_start();
         
+        // Disable error reporting temporarily
+        $old_error_reporting = error_reporting(0);
+        $old_display_errors = ini_get('display_errors');
+        ini_set('display_errors', 0);
+        
         try {
-            // Create database tables if needed
-            $this->create_tables();
+            // Set a flag to prevent any class instantiation during activation
+            define('TUTOR_ZOYKTECH_ACTIVATING', true);
+            
+            // Create database tables
+            $this->create_tables_safe();
             
             // Set default options
-            $this->set_default_options();
+            $this->set_default_options_safe();
             
-            // Flush rewrite rules
-            flush_rewrite_rules();
+            // Clear rewrite rules
+            delete_option('rewrite_rules');
             
         } catch (Exception $e) {
-            // Log error instead of displaying it
+            // Log error silently
             error_log('Tutor Zoyktech Activation Error: ' . $e->getMessage());
+        } catch (Error $e) {
+            // Log fatal errors silently
+            error_log('Tutor Zoyktech Activation Fatal Error: ' . $e->getMessage());
         }
         
-        // Clean output buffer
+        // Restore error reporting
+        error_reporting($old_error_reporting);
+        ini_set('display_errors', $old_display_errors);
+        
+        // Discard any captured output
         ob_end_clean();
     }
 
@@ -232,69 +254,104 @@ class Tutor_Zoyktech_WooCommerce_Gateway {
      * Plugin deactivation
      */
     public function deactivate() {
-        // Clean up if needed
-        flush_rewrite_rules();
+        // Capture any output
+        ob_start();
+        
+        try {
+            // Clean up
+            delete_option('rewrite_rules');
+        } catch (Exception $e) {
+            // Silent error handling
+            error_log('Tutor Zoyktech Deactivation Error: ' . $e->getMessage());
+        }
+        
+        // Discard output
+        ob_end_clean();
     }
 
     /**
-     * Create database tables
+     * Create database tables safely
      */
-    private function create_tables() {
+    private function create_tables_safe() {
         global $wpdb;
+
+        // Suppress any MySQL warnings
+        $wpdb->hide_errors();
 
         $charset_collate = $wpdb->get_charset_collate();
 
         // Payment logs table
         $table_name = $wpdb->prefix . 'zoyktech_payment_logs';
-        $sql = "CREATE TABLE $table_name (
-            id bigint(20) NOT NULL AUTO_INCREMENT,
-            order_id bigint(20) NOT NULL,
-            transaction_id varchar(100) DEFAULT NULL,
-            zoyktech_order_id varchar(100) NOT NULL,
-            amount decimal(10,2) NOT NULL,
-            currency varchar(3) NOT NULL DEFAULT 'ZMW',
-            phone_number varchar(20) NOT NULL,
-            provider_id int(11) NOT NULL,
-            status varchar(20) NOT NULL DEFAULT 'pending',
-            request_data longtext DEFAULT NULL,
-            response_data longtext DEFAULT NULL,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY zoyktech_order_id (zoyktech_order_id),
-            KEY order_id (order_id),
-            KEY status (status)
-        ) $charset_collate;";
+        
+        // Check if table exists first
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'");
+        
+        if (!$table_exists) {
+            $sql = "CREATE TABLE $table_name (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                order_id bigint(20) NOT NULL,
+                transaction_id varchar(100) DEFAULT NULL,
+                zoyktech_order_id varchar(100) NOT NULL,
+                amount decimal(10,2) NOT NULL,
+                currency varchar(3) NOT NULL DEFAULT 'ZMW',
+                phone_number varchar(20) NOT NULL,
+                provider_id int(11) NOT NULL,
+                status varchar(20) NOT NULL DEFAULT 'pending',
+                request_data longtext DEFAULT NULL,
+                response_data longtext DEFAULT NULL,
+                created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY zoyktech_order_id (zoyktech_order_id),
+                KEY order_id (order_id),
+                KEY status (status)
+            ) $charset_collate;";
 
-        if (!function_exists('dbDelta')) {
-            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            if (!function_exists('dbDelta')) {
+                require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            }
+            
+            // Execute silently
+            @dbDelta($sql);
         }
         
-        dbDelta($sql);
+        // Restore error display
+        $wpdb->show_errors();
     }
 
     /**
-     * Set default options
+     * Set default options safely
      */
-    private function set_default_options() {
-        $default_options = array(
-            'auto_create_products' => true,
-            'default_currency' => 'ZMW',
-            'enrollment_email' => true
-        );
+    private function set_default_options_safe() {
+        $option_name = 'tutor_zoyktech_options';
         
-        add_option('tutor_zoyktech_options', $default_options);
+        // Only set if doesn't exist
+        if (!get_option($option_name)) {
+            $default_options = array(
+                'auto_create_products' => true,
+                'default_currency' => 'ZMW',
+                'enrollment_email' => true
+            );
+            
+            add_option($option_name, $default_options, '', 'no');
+        }
     }
 
     /**
      * Show notice if WooCommerce is not active
      */
     public function woocommerce_missing_notice() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        
         echo '<div class="notice notice-error"><p>';
         echo __('Tutor LMS Zoyktech WooCommerce Gateway requires WooCommerce to be installed and activated.', 'tutor-zoyktech');
         echo '</p></div>';
     }
 }
 
-// Initialize the plugin
-Tutor_Zoyktech_WooCommerce_Gateway::get_instance();
+// Initialize the plugin - but only if not activating
+if (!defined('TUTOR_ZOYKTECH_ACTIVATING')) {
+    Tutor_Zoyktech_WooCommerce_Gateway::get_instance();
+}

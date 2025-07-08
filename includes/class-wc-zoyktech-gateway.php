@@ -3,16 +3,6 @@
       * Handle payment callback
       */
      public function handle_callback() {
-        // Prevent output during construction
-        if (!ob_get_level()) {
-            ob_start();
-        }
-        
--        $this->log('Payment callback received');
--
--        try {
-        
-        // Clean output buffer
         if (ob_get_level()) {
             ob_end_clean();
         }

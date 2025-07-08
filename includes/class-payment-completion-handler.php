@@ -19,16 +19,8 @@ class Tutor_Zoyktech_Payment_Completion_Handler {
      * Constructor
      */
     public function __construct() {
-        // Prevent output during construction
-        if (!ob_get_level()) {
-            ob_start();
-        }
-        
         // Only initialize if WooCommerce is active
         if (!class_exists('WooCommerce')) {
-            if (ob_get_level()) {
-                ob_end_clean();
-            }
             return;
         }
         
@@ -46,11 +38,6 @@ class Tutor_Zoyktech_Payment_Completion_Handler {
         
         // Fix pending payment status
         add_action('wp_loaded', array($this, 'check_pending_payments'));
-        
-        // Clean output buffer
-        if (ob_get_level()) {
-            ob_end_clean();
-        }
     }
 
     /**

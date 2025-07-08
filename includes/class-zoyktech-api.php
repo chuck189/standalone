@@ -3,19 +3,9 @@
       * Log messages
       */
      private function log($message) {
-        // Prevent output during construction
-        if (!ob_get_level()) {
-            ob_start();
-        }
-        
          if ($this->debug) {
              error_log('ZOYKTECH_API: ' . $message);
          }
-        
-        // Clean output buffer
-        if (ob_get_level()) {
-            ob_end_clean();
-        }
      }
 +
 +    /**
